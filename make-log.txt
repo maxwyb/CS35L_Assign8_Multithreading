@@ -1,0 +1,16 @@
+rm -f *.o *.tmp 1-test.ppm 2-test.ppm 4-test.ppm 8-test.ppm srt srt.tgz
+gcc -pthread -std=gnu11 -g -O2 -Wall -Wextra -Wno-unused-parameter   -c -o main.o main.c
+gcc -pthread -std=gnu11 -g -O2 -Wall -Wextra -Wno-unused-parameter   -c -o raymath.o raymath.c
+gcc -pthread -std=gnu11 -g -O2 -Wall -Wextra -Wno-unused-parameter   -c -o shaders.o shaders.c
+gcc -pthread -std=gnu11 -g -O2 -Wall -Wextra -Wno-unused-parameter -o srt main.o raymath.o shaders.o -lm
+time ./srt 1-test.ppm >1-test.ppm.tmp
+mv 1-test.ppm.tmp 1-test.ppm
+time ./srt 2-test.ppm >2-test.ppm.tmp
+mv 2-test.ppm.tmp 2-test.ppm
+time ./srt 4-test.ppm >4-test.ppm.tmp
+mv 4-test.ppm.tmp 4-test.ppm
+time ./srt 8-test.ppm >8-test.ppm.tmp
+mv 8-test.ppm.tmp 8-test.ppm
+for file in 1-test.ppm 2-test.ppm 4-test.ppm 8-test.ppm; do \
+	  diff -u baseline.ppm $file || exit; \
+	done

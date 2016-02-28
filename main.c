@@ -188,6 +188,10 @@ void* pixelProcessing(void *arg) {
 //	*(outputs + (temp->num)) = (char*)malloc(sizeof(char) * str_size);
 	outputs[temp->num] = (char*)malloc(sizeof(char) * str_size);
 //	*(*(outputs + (temp->num))) = ' ';
+	if (outputs[temp->num] == NULL) {
+		fprintf(stderr, "Memory allocation failed.\n");
+    	exit(1);
+	}
 
 	/* for every pixel */
 //    for( int px=0; px<width; ++px )
@@ -257,6 +261,10 @@ void* pixelProcessing(void *arg) {
 
 			str_size += strlen(aPoint);
 			outputs[temp->num] = (char*)realloc(outputs[temp->num], sizeof(char) * str_size);
+			if (outputs[temp->num] == NULL) {
+				fprintf(stderr, "Memory allocation failed.\n");
+    			exit(1);
+			}
 			
 			strcat(outputs[temp->num], aPoint);
         }
@@ -269,6 +277,10 @@ void* pixelProcessing(void *arg) {
 		//printf("\n----------\n");
 		str_size++;
 		*(outputs + temp->num)= realloc(*(outputs + temp->num), sizeof(char) * str_size);
+		if (outputs[temp->num] == NULL) {
+			fprintf(stderr, "Memory allocation failed.\n");
+    		exit(1);
+		}
 		strcat(*(outputs + temp->num), "\n");
     }
 
@@ -321,11 +333,15 @@ main( int argc, char **argv )
 //	pixelProcessing();
 
     pthread_t* threadID = malloc(nthreads * sizeof(pthread_t));
-    interval* intervals = malloc(nthreads * sizeof(intervals));
+    interval* intervals = malloc(nthreads * sizeof(interval));
 
     int intervalWidth = width / nthreads;
 
 	outputs = (char**)malloc(nthreads * sizeof(char*));	
+	if (outputs == NULL) {
+		fprintf(stderr, "Memory allocation failed.\n");
+    	exit(1);
+	}
 
 	int t;
     for (t = 0; t < nthreads; t++)
@@ -369,7 +385,7 @@ main( int argc, char **argv )
 	// free dynamically allocated space
 	for (t = 0; t < nthreads; t++)
 		free(outputs[t]);
-	free(outputs);
+	//free(outputs);
 
     if( ferror( stdout ) || fclose( stdout ) != 0 )
     {
