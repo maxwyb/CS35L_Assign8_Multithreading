@@ -6,7 +6,7 @@ Improve "srt" - a ray tracing program in C - to support multithreading, and thus
 ### How to run the program
 - <code>cd</code> into the program directory; then <code>make</make> to generate the executable file.
 - <code>./srt -N</code> to run, where <code>-N</code> is the number of threads using.
-- <code>make clean check</code> output four ray tracing images calculated by 1, 2, 4 and 8 threads.
+- <code>make clean check</code> outputs four ray tracing images calculated by 1, 2, 4 and 8 threads.
 
 
 ### References
