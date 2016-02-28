@@ -331,8 +331,10 @@ main( int argc, char **argv )
     for (t = 0; t < nthreads; t++)
     {
 		intervals[t].num = t;
-        intervals[t].front = t * intervalWidth;
-        intervals[t].back = (t+1) * intervalWidth;
+        intervals[t].front = t * (intervalWidth + 1);
+        intervals[t].back = (t+1) * (intervalWidth + 1);
+		if (intervals[t].back > width)
+			intervals[t].back = width;
 
         int res = pthread_create(&threadID[t], 0, pixelProcessing, (void *)&intervals[t]);
         if (res) {
