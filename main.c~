@@ -27,23 +27,27 @@
 #include <math.h>
 
 #include <pthread.h>
+#include <string.h>
 
-typedef struct
-{
-    int front;
-    int back;
+typedef struct {
+	int num; // to determine order of threads
+    int front; // first element in the interval
+    int back; // last element in the interval, not inclusive
 } interval;
 
+
 // global variables and constants
- scene_t scene;
- Vec3 camera_pos;
- Vec3 camera_dir;
- double camera_fov; // CONST
- Vec3 bg_color;
- double pixel_dx; // CONST
- double pixel_dy; // CONST
- double subsample_dx; // CONST
- double subsample_dy; // CONST
+scene_t scene;
+Vec3 camera_pos;
+Vec3 camera_dir;
+double camera_fov; // CONST
+Vec3 bg_color;
+double pixel_dx; // CONST
+double pixel_dy; // CONST
+double subsample_dx; // CONST
+double subsample_dy; // CONST
+
+char **outputs; // a 2-D string for outputs
 
 
 static double dirs[6][3] =
@@ -180,6 +184,11 @@ enum { z = 1 };
 void* pixelProcessing(void *arg) {
 
 	interval* temp = (interval*)arg;
+	int str_size = 10; // a small initial size to avoid memory corruption
+//	*(outputs + (temp->num)) = (char*)malloc(sizeof(char) * str_size);
+	outputs[temp->num] = (char*)malloc(sizeof(char) * str_size);
+//	*(*(outputs + (temp->num))) = ' ';
+
 	/* for every pixel */
 //    for( int px=0; px<width; ++px )
 	int px;
@@ -241,10 +250,26 @@ void* pixelProcessing(void *arg) {
             /* write this pixel out to disk. ppm is forgiving about whitespace,
              * but has a maximum of 70 chars/line, so use one line per pixel
              */
-            printf( "%.0f %.0f %.0f\n",
-		    scaled_color[0], scaled_color[1], scaled_color[2] );
+            //printf( "%.0f %.0f %.0f\n",
+		    //scaled_color[0], scaled_color[1], scaled_color[2] );
+			char *aPoint;
+			asprintf(&aPoint, "%.0f %.0f %.0f\n", scaled_color[0], scaled_color[1], scaled_color[2]);
+
+			str_size += strlen(aPoint);
+			outputs[temp->num] = (char*)realloc(outputs[temp->num], sizeof(char) * str_size);
+			
+			strcat(outputs[temp->num], aPoint);
         }
-        printf( "\n" );
+        //printf( "\n" );
+		//asprintf((outputs + temp->num), "\n");
+		//printf("%s\n", *(outputs +temp->num));
+		//*(outputs + temp->num) = "a testing string in a char array. \n";
+		//asprintf((outputs + temp->num), "a testing string in a char array. ");
+		//printf("%s", *(outputs + temp->num));
+		//printf("\n----------\n");
+		str_size++;
+		*(outputs + temp->num)= realloc(*(outputs + temp->num), sizeof(char) * str_size);
+		strcat(*(outputs + temp->num), "\n");
     }
 
 }
@@ -300,11 +325,12 @@ main( int argc, char **argv )
 
     int intervalWidth = width / nthreads;
 
-	int t;
+	outputs = (char**)malloc(nthreads * sizeof(char*));	
 
+	int t;
     for (t = 0; t < nthreads; t++)
     {
-
+		intervals[t].num = t;
         intervals[t].front = t * intervalWidth;
         intervals[t].back = (t+1) * intervalWidth;
 
@@ -318,14 +344,30 @@ main( int argc, char **argv )
     for (t = 0; t < nthreads; t++)
     {
 		void *retVal;
-        int res = pthread_join(threads[t], &retVal);
+        int res = pthread_join(threadID[t], &retVal);
 		if (res) {
-            fprintf(stderr, "Error creating thread.\n");
+            fprintf(stderr, "Error joining thread.\n");
             return -1;
 		}
     }
 
+	// output rendering result
+	for (t = 0; t < nthreads; t++) {
+//		fprintf(stderr, "Printing output... i = %d\n", t);
+		char *str = *(outputs + t);
+//		int i;
+//		for (i = 0; i < strlen(str); i++) {
+//			printf("%c", str[i]);
+//		}
+		printf("%s", str);
+	}
+
     free_scene( &scene );
+
+	// free dynamically allocated space
+	for (t = 0; t < nthreads; t++)
+		free(outputs[t]);
+	free(outputs);
 
     if( ferror( stdout ) || fclose( stdout ) != 0 )
     {
